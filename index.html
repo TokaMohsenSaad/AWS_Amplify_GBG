@@ -1,23 +1,571 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AWS Amplify Website</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Nexus Task & Project Management Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
 </head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 antialiased h-screen overflow-hidden flex">
 
-<body>
-    <main class="container">
-        <h1>My AWS Amplify Auto Deployment Works!</h1>
+<!-- Sidebar Navigation -->
+<aside id="sidebar" class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700/60 flex flex-col justify-between transition-all duration-300 z-20 flex-shrink-0">
+    <div>
+        <!-- Brand Header -->
+        <div class="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 font-bold text-lg">
+                    N
+                </div>
+                <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">Nexus Workspace</span>
+            </div>
+        </div>
 
-        <p>
-            This static website is hosted using AWS Amplify.
-        </p>
+        <!-- Navigation Links -->
+        <nav class="p-4 space-y-1.5">
+            <div class="px-3 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Main</div>
+            
+            <button onclick="switchTab('kanban')" id="nav-kanban" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                <i data-lucide="kanban" class="w-5 h-5"></i>
+                <span>Kanban Board</span>
+            </button>
 
-        <p>
-            Deployed automatically from GitHub.
-        </p>
+            <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                <span>Analytics & Insights</span>
+            </button>
+
+            <button onclick="switchTab('team')" id="nav-team" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span>Team & Activity</span>
+            </button>
+
+            <div class="pt-4 px-3 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Projects</div>
+
+            <div class="space-y-1">
+                <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50">
+                    <span class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                        AWS Migration
+                    </span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500">8</span>
+                </a>
+                <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50">
+                    <span class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        Mobile App Redesign
+                    </span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500">14</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- User Profile & Theme Toggle Footer -->
+    <div class="p-4 border-t border-slate-100 dark:border-slate-700/50 space-y-3">
+        <div class="flex items-center justify-between p-2 rounded-lg bg-slate-100 dark:bg-slate-700/40">
+            <div class="flex items-center gap-2.5">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="w-8 h-8 rounded-full object-cover">
+                <div class="text-left">
+                    <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">Toka Mohsen</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400">DevOps Specialist</p>
+                </div>
+            </div>
+            <button onclick="toggleTheme()" class="p-1.5 rounded-md hover:bg-white dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 transition-all" title="Toggle Theme">
+                <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+            </button>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Layout Area -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+
+    <!-- Top Header -->
+    <header class="h-16 border-b border-slate-200 dark:border-slate-700/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 flex items-center justify-between z-10">
+        <div class="flex items-center gap-4">
+            <h1 id="page-title" class="text-xl font-bold text-slate-800 dark:text-white">Kanban Board</h1>
+            <span id="task-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">12 Tasks</span>
+        </div>
+
+        <!-- Action Buttons & Search -->
+        <div class="flex items-center gap-3">
+            <div class="relative hidden sm:block">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="search-input" onkeyup="filterTasks()" placeholder="Search tasks..." class="pl-9 pr-4 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-slate-700/60 text-slate-800 dark:text-slate-200 border-none focus:ring-2 focus:ring-blue-500 outline-none w-52 transition-all">
+            </div>
+
+            <button onclick="openNewTaskModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm shadow-blue-500/30">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>New Task</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area (Tabbed View) -->
+    <main class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
+
+        <!-- TAB 1: KANBAN BOARD -->
+        <section id="tab-kanban" class="tab-content h-full">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-full items-start">
+                
+                <!-- Column: To Do -->
+                <div class="bg-slate-100/80 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200/60 dark:border-slate-700/50 flex flex-col max-h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+                            <h2 class="font-semibold text-sm text-slate-700 dark:text-slate-300">To Do</h2>
+                        </div>
+                        <span id="count-todo" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">0</span>
+                    </div>
+                    <div id="col-todo" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1 min-h-[150px]" ondragover="allowDrop(event)" ondrop="drop(event, 'todo')">
+                        <!-- Dynamic Cards Inserted Here -->
+                    </div>
+                </div>
+
+                <!-- Column: In Progress -->
+                <div class="bg-slate-100/80 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200/60 dark:border-slate-700/50 flex flex-col max-h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                            <h2 class="font-semibold text-sm text-slate-700 dark:text-slate-300">In Progress</h2>
+                        </div>
+                        <span id="count-inprogress" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">0</span>
+                    </div>
+                    <div id="col-inprogress" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1 min-h-[150px]" ondragover="allowDrop(event)" ondrop="drop(event, 'inprogress')">
+                        <!-- Dynamic Cards Inserted Here -->
+                    </div>
+                </div>
+
+                <!-- Column: Done -->
+                <div class="bg-slate-100/80 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200/60 dark:border-slate-700/50 flex flex-col max-h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                            <h2 class="font-semibold text-sm text-slate-700 dark:text-slate-300">Completed</h2>
+                        </div>
+                        <span id="count-done" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">0</span>
+                    </div>
+                    <div id="col-done" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1 min-h-[150px]" ondragover="allowDrop(event)" ondrop="drop(event, 'done')">
+                        <!-- Dynamic Cards Inserted Here -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 2: ANALYTICS -->
+        <section id="tab-analytics" class="tab-content hidden space-y-6">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/50 shadow-sm">
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Total Tasks</p>
+                    <p class="text-2xl font-bold mt-1 text-slate-800 dark:text-white" id="stat-total">0</p>
+                    <span class="text-xs font-medium text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1 mt-2">
+                        <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> +12% from last week
+                    </span>
+                </div>
+                <div class="p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/50 shadow-sm">
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">In Progress</p>
+                    <p class="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400" id="stat-inprogress">0</p>
+                    <span class="text-xs font-medium text-slate-400 inline-flex items-center gap-1 mt-2">
+                        Active sprints
+                    </span>
+                </div>
+                <div class="p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/50 shadow-sm">
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Completed Rate</p>
+                    <p class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400" id="stat-completion">0%</p>
+                    <span class="text-xs font-medium text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1 mt-2">
+                        High velocity
+                    </span>
+                </div>
+                <div class="p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/50 shadow-sm">
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Deployment Status</p>
+                    <p class="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">Pass</p>
+                    <span class="text-xs font-medium text-blue-500 inline-flex items-center gap-1 mt-2">
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Build #1042 Success
+                    </span>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/50 shadow-sm">
+                    <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-4 text-sm">Task Completion Progress</h3>
+                    <div class="h-64 relative">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+                <div class="p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/50 shadow-sm">
+                    <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-4 text-sm">Status Distribution</h3>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: TEAM & ACTIVITY -->
+        <section id="tab-team" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Team Members List -->
+                <div class="lg:col-span-1 p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/50 shadow-sm space-y-4">
+                    <h3 class="font-semibold text-slate-800 dark:text-slate-200 text-sm">Team Members</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                            <div class="flex items-center gap-3">
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" class="w-9 h-9 rounded-full object-cover" alt="User">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Toka Mohsen</p>
+                                    <p class="text-xs text-slate-400">DevOps & Cloud Engineer</p>
+                                </div>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-emerald-500" title="Online"></span>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                            <div class="flex items-center gap-3">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" class="w-9 h-9 rounded-full object-cover" alt="User">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Alex Rivera</p>
+                                    <p class="text-xs text-slate-400">Senior Full-Stack Developer</p>
+                                </div>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-emerald-500" title="Online"></span>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                            <div class="flex items-center gap-3">
+                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" class="w-9 h-9 rounded-full object-cover" alt="User">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Sarah Chen</p>
+                                    <p class="text-xs text-slate-400">UI/UX Designer</p>
+                                </div>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" title="Offline"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Timeline -->
+                <div class="lg:col-span-2 p-5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/50 shadow-sm space-y-4">
+                    <h3 class="font-semibold text-slate-800 dark:text-slate-200 text-sm">Recent Activity Stream</h3>
+                    <div class="space-y-4 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-700">
+                        
+                        <div class="relative flex items-start gap-4 pl-8">
+                            <div class="absolute left-1.5 top-1 w-4 h-4 rounded-full bg-blue-500 ring-4 ring-white dark:ring-slate-800"></div>
+                            <div>
+                                <p class="text-sm text-slate-800 dark:text-slate-200">
+                                    <span class="font-semibold">Toka Mohsen</span> created task <span class="text-blue-600 dark:text-blue-400">"Configure CloudFront CDN Caching Rules"</span>
+                                </p>
+                                <p class="text-xs text-slate-400 mt-0.5">10 minutes ago</p>
+                            </div>
+                        </div>
+
+                        <div class="relative flex items-start gap-4 pl-8">
+                            <div class="absolute left-1.5 top-1 w-4 h-4 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-slate-800"></div>
+                            <div>
+                                <p class="text-sm text-slate-800 dark:text-slate-200">
+                                    <span class="font-semibold">Alex Rivera</span> moved <span class="text-emerald-600 dark:text-emerald-400">"Set up Vite Build Pipeline"</span> to Completed
+                                </p>
+                                <p class="text-xs text-slate-400 mt-0.5">1 hour ago</p>
+                            </div>
+                        </div>
+
+                        <div class="relative flex items-start gap-4 pl-8">
+                            <div class="absolute left-1.5 top-1 w-4 h-4 rounded-full bg-amber-500 ring-4 ring-white dark:ring-slate-800"></div>
+                            <div>
+                                <p class="text-sm text-slate-800 dark:text-slate-200">
+                                    <span class="font-semibold">Sarah Chen</span> attached 2 Figma files to <span class="text-amber-600 dark:text-amber-400">"Design Dark Theme Palette"</span>
+                                </p>
+                                <p class="text-xs text-slate-400 mt-0.5">3 hours ago</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
+</div>
+
+<!-- Modal: Add New Task -->
+<div id="modal-task" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-700 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 pb-3">
+            <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100">Create New Task</h3>
+            <button onclick="closeNewTaskModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="form-task" onsubmit="handleCreateTask(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Task Title</label>
+                <input type="text" id="task-title" required placeholder="e.g. Optimize React Bundle Size" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Description</label>
+                <textarea id="task-desc" rows="3" placeholder="Add brief task summary..." class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Status</label>
+                    <select id="task-status" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="todo">To Do</option>
+                        <option value="inprogress">In Progress</option>
+                        <option value="done">Completed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Priority</label>
+                    <select id="task-priority" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeNewTaskModal()" class="px-4 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm">Save Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Initial Task State Data
+    let tasks = [
+        { id: '1', title: 'Setup Vite Build Pipeline', desc: 'Configure build output directory to dist/ for static hosting', status: 'done', priority: 'High', assignee: 'Alex Rivera' },
+        { id: '2', title: 'Configure CloudFront CDN', desc: 'Setup edge caching headers and static asset delivery', status: 'inprogress', priority: 'High', assignee: 'Toka Mohsen' },
+        { id: '3', title: 'UI Dark Mode Palette', desc: 'Ensure WCAG AA contrast compliance across all slate colors', status: 'inprogress', priority: 'Medium', assignee: 'Sarah Chen' },
+        { id: '4', title: 'Unit Tests for State Handler', desc: 'Write Jest test cases for drag and drop column transitions', status: 'todo', priority: 'Low', assignee: 'Alex Rivera' },
+        { id: '5', title: 'Documentation & Senior Demo', desc: 'Prepare interactive presentation walkthrough', status: 'todo', priority: 'High', assignee: 'Toka Mohsen' }
+    ];
+
+    let progressChartInstance = null;
+    let distributionChartInstance = null;
+
+    // Initialize App on DOM Load
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        renderTasks();
+        initCharts();
+    });
+
+    // Theme Toggle Functionality
+    function toggleTheme() {
+        document.documentElement.classList.toggle('dark');
+        setTimeout(updateChartColors, 150);
+    }
+
+    // Tab Switcher
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.nav-item').forEach(el => {
+            el.classList.remove('bg-blue-50', 'text-blue-600', 'dark:bg-blue-500/10', 'dark:text-blue-400');
+            el.classList.add('text-slate-600', 'dark:text-slate-400');
+        });
+
+        document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+        const activeNav = document.getElementById(`nav-${tabName}`);
+        activeNav.classList.add('bg-blue-50', 'text-blue-600', 'dark:bg-blue-500/10', 'dark:text-blue-400');
+
+        // Update Title
+        const titles = { kanban: 'Kanban Board', analytics: 'Analytics & Insights', team: 'Team & Activity' };
+        document.getElementById('page-title').innerText = titles[tabName];
+    }
+
+    // Render Tasks into Columns
+    function renderTasks(filterQuery = '') {
+        const cols = { todo: document.getElementById('col-todo'), inprogress: document.getElementById('col-inprogress'), done: document.getElementById('col-done') };
+        Object.values(cols).forEach(c => c.innerHTML = '');
+
+        const counts = { todo: 0, inprogress: 0, done: 0 };
+
+        tasks.filter(t => t.title.toLowerCase().includes(filterQuery.toLowerCase())).forEach(task => {
+            counts[task.status]++;
+            const card = createCardElement(task);
+            if(cols[task.status]) cols[task.status].appendChild(card);
+        });
+
+        // Update Counter Badges
+        document.getElementById('count-todo').innerText = counts.todo;
+        document.getElementById('count-inprogress').innerText = counts.inprogress;
+        document.getElementById('count-done').innerText = counts.done;
+        document.getElementById('task-count-badge').innerText = `${tasks.length} Tasks`;
+
+        // Update Analytics Stats
+        document.getElementById('stat-total').innerText = tasks.length;
+        document.getElementById('stat-inprogress').innerText = counts.inprogress;
+        const compRate = tasks.length ? Math.round((counts.done / tasks.length) * 100) : 0;
+        document.getElementById('stat-completion').innerText = `${compRate}%`;
+
+        lucide.createIcons();
+        updateCharts();
+    }
+
+    // Create Card HTML DOM Element
+    function createCardElement(task) {
+        const el = document.createElement('div');
+        el.className = "bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing";
+        el.draggable = true;
+        el.ondragstart = (e) => e.dataTransfer.setData('text/plain', task.id);
+
+        const priorityColors = {
+            High: 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400',
+            Medium: 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',
+            Low: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+        };
+
+        el.innerHTML = `
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${priorityColors[task.priority]}">${task.priority} Priority</span>
+                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 dark:text-slate-600 dark:hover:text-red-400 transition-colors">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+            <h3 class="font-semibold text-sm text-slate-800 dark:text-slate-100 mb-1">${task.title}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">${task.desc || 'No description provided.'}</p>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/40">
+                <span class="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                    <i data-lucide="user" class="w-3 h-3"></i> ${task.assignee}
+                </span>
+            </div>
+        `;
+        return el;
+    }
+
+    // Drag and Drop Logic
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drop(ev, newStatus) {
+        ev.preventDefault();
+        const id = ev.dataTransfer.getData('text/plain');
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            task.status = newStatus;
+            renderTasks();
+        }
+    }
+
+    // Modal Control & Form Submission
+    function openNewTaskModal() { document.getElementById('modal-task').classList.remove('hidden'); }
+    function closeNewTaskModal() { document.getElementById('modal-task').classList.add('hidden'); }
+
+    function handleCreateTask(e) {
+        e.preventDefault();
+        const newTask = {
+            id: Date.now().toString(),
+            title: document.getElementById('task-title').value,
+            desc: document.getElementById('task-desc').value,
+            status: document.getElementById('task-status').value,
+            priority: document.getElementById('task-priority').value,
+            assignee: 'Toka Mohsen'
+        };
+        tasks.push(newTask);
+        document.getElementById('form-task').reset();
+        closeNewTaskModal();
+        renderTasks();
+    }
+
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        renderTasks();
+    }
+
+    function filterTasks() {
+        const query = document.getElementById('search-input').value;
+        renderTasks(query);
+    }
+
+    // Chart.js Configuration
+    function initCharts() {
+        const ctxProgress = document.getElementById('progressChart').getContext('2d');
+        const ctxDist = document.getElementById('distributionChart').getContext('2d');
+
+        progressChartInstance = new Chart(ctxProgress, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Tasks Completed',
+                    data: [2, 5, 3, 8, 6, 9, 12],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        distributionChartInstance = new Chart(ctxDist, {
+            type: 'doughnut',
+            data: {
+                labels: ['To Do', 'In Progress', 'Completed'],
+                datasets: [{
+                    data: [2, 2, 1],
+                    backgroundColor: ['#94a3b8', '#f59e0b', '#10b981']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    function updateCharts() {
+        if (!distributionChartInstance) return;
+        const counts = [
+            tasks.filter(t => t.status === 'todo').length,
+            tasks.filter(t => t.status === 'inprogress').length,
+            tasks.filter(t => t.status === 'done').length
+        ];
+        distributionChartInstance.data.datasets[0].data = counts;
+        distributionChartInstance.update();
+    }
+
+    function updateChartColors() {
+        if (progressChartInstance && distributionChartInstance) {
+            progressChartInstance.update();
+            distributionChartInstance.update();
+        }
+    }
+</script>
+
 </body>
 </html>
